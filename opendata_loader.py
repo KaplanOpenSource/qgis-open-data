@@ -326,7 +326,7 @@ class OpenDataLoader:
             infoResponse = rq.get(metdataUrl, verify=False)
             #return infoResponse
         except rq.exceptions.SSLError:
-            self.mb.pushCritical('SSL Eroor'," could not get layers from url")
+            self.mb.pushCritical('SSL Error'," could not get layers from url")
             return "error"
         else:
             data = infoResponse.json()
@@ -514,7 +514,7 @@ class OpenDataLoader:
             try:
                 infoResponse = rq.get(metdataUrl, verify=False)
             except rq.exceptions.SSLError:
-                self.mb.pushCritical('SSL Eroor'," could not get layers from url")
+                self.mb.pushCritical('SSL Error'," could not get layers from url")
                 return "error"
             connectionName = infoResponse.json()["title"]
         connectionType = "connections-arcgisfeatureserver"
@@ -533,7 +533,7 @@ class OpenDataLoader:
             try:
                 infoResponse = rq.get(metdataUrl, verify=False)
             except rq.exceptions.SSLError:
-                self.mb.pushCritical('SSL Eroor'," could not get layers from url")
+                self.mb.pushCritical('SSL Error'," could not get layers from url")
                 return "error"
             connectionName = infoResponse.json()["title"]
         connectionType = "connections-arcgismapserver"
