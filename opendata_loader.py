@@ -256,6 +256,9 @@ class OpenDataLoader:
             #self.mb.pushInfo('ביצעת עד כה {} חיבורים'.format(dataList['logins']),"")
             self.dlg.loginsCounter.setText('ביצעת עד כה\n {} חיבורים'.format(dataList['logins']))
 
+        if dataList['type'] == 'free':
+            self.dlg.versionLabel.setText('גרסה חינמית')
+            self.dlg.loginsCounter.setText('ביצעת עד כה\n {} חיבורים'.format(dataList['logins']))
                 
         return dataList['data']
     
