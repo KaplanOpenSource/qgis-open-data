@@ -4,15 +4,6 @@ QGIS Open Data
 QGIS plugin to add Israeli open data resources.
 You're welcome to suggest new resources by openning an issue.
 
-## Using
-Using the plugin is free, but registration is required at https://kaplanopensource.co.il/services/qgis/
-
-Commercial version
-----------
-We also provide a commercial version of the plugin with more than 500 open data resources.
-
-[![https://kaplanopensource.co.il/](https://github.com/KaplanOpenSource/qgis-open-data/blob/master/logo.png)](https://kaplanopensource.co.il/)
-
 ## Examples: Add Israeli government Open Data
 ![](https://kaplanopensourceconsulting.files.wordpress.com/2020/04/qgis-open-data-gov-3.png)
 
@@ -27,6 +18,14 @@ In QGIS, select <code>Plugins > Manage and Install Plugins...</code>
 Zip file with our plugin can be downloaded from the Releases section above.
 ![](https://kaplanopensourceconsulting.files.wordpress.com/2019/11/plugins.png)
 or download and unzip to your QGIS plugins directory.
+
+## Access key registration 
+Using the plugin is free, but registration is required at https://kaplanopensource.co.il/services/qgis/
+
+## Commercial version
+We also provide a commercial version of the plugin with more than 500 open data resources.
+
+[![https://kaplanopensource.co.il/](https://github.com/KaplanOpenSource/qgis-open-data/blob/master/logo.png)](https://kaplanopensource.co.il/)
 
 License
 -------------
