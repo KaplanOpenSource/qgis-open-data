@@ -19,6 +19,9 @@ We also provide a commercial version of the plugin with more than 500 open data 
 ## Examples: Add Israeli municipal Open Data
 ![](https://kaplanopensourceconsulting.files.wordpress.com/2020/04/qgis-open-data-muni-2.png)
 
+## Download
+You can download the official plugin versions from our [releases page](https://github.com/KaplanOpenSource/qgis-open-data/releases) or get a [snapshot](https://github.com/KaplanOpenSource/qgis-open-data/archive/master.zip) of the latest code.
+
 ## Installation
 In QGIS, select <code>Plugins > Manage and Install Plugins...</code>
 Zip file with our plugin can be downloaded from the Releases section above.
