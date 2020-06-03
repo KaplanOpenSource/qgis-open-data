@@ -34,6 +34,9 @@ from .resources import *
 from .opendata_loader_dialog import opendata_loaderDialog
 #from .data_sources_list import *
 import os.path
+import io
+import zipfile
+import tempfile
 from qgis.gui import *
 
 class OpenDataLoader:
@@ -508,6 +511,29 @@ class OpenDataLoader:
                 base_object['features'].append(feature)
         return base_object
 
+    def addTempShapefile(self, layer, group=False, allGroup=None):
+        url = layer["layerUrl"]
+        if "header" in layer:
+            response = rq.get(url,headers={"user-agent":layer["header"]})
+        else:
+            response = rq.get(url)
+        with zipfile.ZipFile(io.BytesIO(response.content)) as thezip:
+            f = tempfile.TemporaryDirectory()
+            if not os.path.isdir(f.name):
+                os.mkdir(f.name)
+            thezip.extractall(path=f.name)
+            filenames = os.listdir(f.name)
+            for name in filenames:
+                if name.endswith(".shp"):
+                    file = os.path.join(f.name,name)
+                    layerName = os.path.splitext(name)[0]
+                    vlayer=QgsVectorLayer(file,layerName,"ogr")
+                    if group:
+                        QgsProject.instance().addMapLayer(vlayer, False)
+                        allGroup.addLayer(vlayer)
+                    else:
+                        QgsProject.instance().addMapLayer(vlayer)
+
 
     def addPermanentArcgisFeature(self, url, name=None, username="", password="" , referer="", crs="EPSG:3857"):
         metdataUrl = "{}?f=pjson".format(url)
@@ -645,6 +671,9 @@ class OpenDataLoader:
                 layersAdded += 1
             elif connectionType == 'GeoJSON':
                 self.addTempGeoJson(layer, group, allGroup)
+                layersAdded += 1
+            elif connectionType == 'shp':
+                self.addTempShapefile(layer, group, allGroup)
                 layersAdded += 1
             elif connectionType == 'esriJson':
                 gj = self.esriJsonToGeoJson(layerUrl)
