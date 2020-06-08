@@ -206,6 +206,8 @@ class OpenDataLoader:
         selectedAll = []
         selectedAll.append(self.dlg.govTree.selectedItems())
         selectedAll.append(self.dlg.muniTree.selectedItems())
+        selectedAll.append(self.dlg.orgTree.selectedItems())
+        selectedAll.append(self.dlg.opendataTree.selectedItems())
         selected = []
         for i in selectedAll:
             selected += i
@@ -220,11 +222,15 @@ class OpenDataLoader:
         if self.curMode == 2:
             self.dlg.govTree.setSelectionMode(QAbstractItemView.SingleSelection)
             self.dlg.muniTree.setSelectionMode(QAbstractItemView.SingleSelection)  
+            self.dlg.orgTree.setSelectionMode(QAbstractItemView.SingleSelection)
+            self.dlg.opendataTree.setSelectionMode(QAbstractItemView.SingleSelection)
             self.dlg.selectionButton.setText("בחירה בודדת")
             self.curMode = 1
         elif self.curMode == 1:
             self.dlg.govTree.setSelectionMode(QAbstractItemView.MultiSelection)
             self.dlg.muniTree.setSelectionMode(QAbstractItemView.MultiSelection)  
+            self.dlg.orgTree.setSelectionMode(QAbstractItemView.MultiSelection)
+            self.dlg.opendataTree.setSelectionMode(QAbstractItemView.MultiSelection)
             self.dlg.selectionButton.setText("בחירה מרובה")
             self.curMode = 2
         
@@ -279,6 +285,8 @@ class OpenDataLoader:
         
         self.dlg.govTree.setSelectionMode(QAbstractItemView.MultiSelection)  
         self.dlg.muniTree.setSelectionMode(QAbstractItemView.MultiSelection)  
+        self.dlg.orgTree.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.dlg.opendataTree.setSelectionMode(QAbstractItemView.MultiSelection)
         self.dataList = self.buildDataList()
         self.curMode = 2
         if "govOrgs" in self.dataList and len(self.dataList["govOrgs"]) > 0:
@@ -287,7 +295,10 @@ class OpenDataLoader:
                 orgItem = QTreeWidgetItem(None, [org["hebName"]])
                 layers = org["layers"]
                 for layer in layers:
-                    layerItem = QTreeWidgetItem(orgItem,[layer["layerHebName"]])
+                    TreeItemName = layer["layerHebName"]
+                    if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
+                        TreeItemName = str(layer["layerHebName"])+" ⛛"
+                    layerItem = QTreeWidgetItem(orgItem,[TreeItemName])
                 self.dlg.govTree.insertTopLevelItems(orgI, [orgItem])
                 self.dlg.govTree.sortItems(0,Qt.AscendingOrder)
         
@@ -297,12 +308,44 @@ class OpenDataLoader:
                 muniItem = QTreeWidgetItem(None, [muni["hebName"]])
                 layers = muni["layers"]
                 for layer in layers:
-                    layerItem = QTreeWidgetItem(muniItem,[layer["layerHebName"]])
+                    TreeItemName = layer["layerHebName"]
+                    if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
+                        TreeItemName = str(layer["layerHebName"])+" ⛛"
+                    layerItem = QTreeWidgetItem(muniItem,[TreeItemName])
 
                 self.dlg.muniTree.insertTopLevelItems(munisI, [muniItem])
                 self.dlg.muniTree.sortItems(0,Qt.AscendingOrder)
+
+        if "NGO" in self.dataList and len(self.dataList["NGO"]) > 0:
+            NGOI = -1
+            for (NGOI, ngo) in enumerate(self.dataList["NGO"].values()):
+                NGOItem = QTreeWidgetItem(None, [ngo["hebName"]])
+                layers = ngo["layers"]
+                for layer in layers:
+                    TreeItemName = layer["layerHebName"]
+                    if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
+                        TreeItemName = str(layer["layerHebName"])+" ⛛"
+                    layerItem = QTreeWidgetItem(NGOItem,[TreeItemName])
+
+                self.dlg.orgTree.insertTopLevelItems(NGOI, [NGOItem])
+                self.dlg.orgTree.sortItems(0,Qt.AscendingOrder)
+
+        if "ods" in self.dataList and len(self.dataList["ods"]) > 0:
+            odsI = -1
+            for (odsI, ods) in enumerate(self.dataList["ods"].values()):
+                odsItem = QTreeWidgetItem(None, [ods["hebName"]])
+                layers = ods["layers"]
+                for layer in layers:
+                    TreeItemName = layer["layerHebName"]
+                    if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
+                        TreeItemName = str(layer["layerHebName"])+" ⛛"
+                    layerItem = QTreeWidgetItem(odsItem,[TreeItemName])
+
+                self.dlg.opendataTree.insertTopLevelItems(odsI, [odsItem])
+                self.dlg.opendataTree.sortItems(0,Qt.AscendingOrder)
                 
     def checkCredentials(self):
+        s = QgsSettings()
         userEmail = self.dlg.emailInput.text()
         userKey = self.dlg.keyInput.text()
         userCreds = {'email':userEmail, 'key':userKey}
@@ -535,7 +578,7 @@ class OpenDataLoader:
                 if name.endswith(".shp"):
                     file = os.path.join(f.name,name)
                     layerName = os.path.splitext(name)[0]
-                    vlayer=QgsVectorLayer(file,layerName,"ogr")
+                    vlayer=QgsVectorLayer(file,layerName,layer["tempLayerType"])
                     if group:
                         QgsProject.instance().addMapLayer(vlayer, False)
                         allGroup.addLayer(vlayer)
@@ -604,6 +647,8 @@ class OpenDataLoader:
         
         selectedItemsAll.append(self.dlg.govTree.selectedItems())
         selectedItemsAll.append(self.dlg.muniTree.selectedItems())
+        selectedItemsAll.append(self.dlg.orgTree.selectedItems())
+        selectedItemsAll.append(self.dlg.opendataTree.selectedItems())
         selectedItems = []
         for i in selectedItemsAll:
             selectedItems += i
@@ -619,20 +664,29 @@ class OpenDataLoader:
 
             parent_text = parent.text(0)
 
-                
             for muni in self.dataList["municipalities"].values():
                 if parent_text == muni["hebName"]:
                     layers.extend(muni["layers"])
 
-                
             for govOrg in self.dataList["govOrgs"].values():
                 if parent_text == govOrg["hebName"]:
                     layers.extend(govOrg["layers"])
 
-                
+            for org in self.dataList["NGO"].values():
+                if parent_text == org["hebName"]:
+                    layers.extend(org["layers"])
+
+            for ods in self.dataList["ods"].values():
+                if parent_text == ods["hebName"]:
+                    layers.extend(ods["layers"])
+
             for layer in layers:
-                if item.text(0) == layer["layerHebName"]:
-                    selectedLayers.append(layer)
+                if layer["tempLayerType"] == "ogr":
+                    if item.text(0)[:-2] == layer["layerHebName"]:
+                        selectedLayers.append(layer)
+                else:
+                    if item.text(0) == layer["layerHebName"]:
+                        selectedLayers.append(layer)
         seen = set()
         new_l = []
         for d in selectedLayers:
@@ -724,10 +778,6 @@ class OpenDataLoader:
             self.mb.pushInfo('No layers to add',"")
         
     
-    def typesAvailable(self,layer):
-        """TODO Will be used to add available types to the tree items"""
-        pass
-    
     
     def addToBrowser(self):
         sending_button = self.dlg.sender()
@@ -736,6 +786,8 @@ class OpenDataLoader:
         
         selectedItemsAll.append(self.dlg.govTree.selectedItems())
         selectedItemsAll.append(self.dlg.muniTree.selectedItems())
+        selectedItemsAll.append(self.dlg.orgTree.selectedItems())
+        selectedItemsAll.append(self.dlg.opendataTree.selectedItems())
         selectedItems = []
         for i in selectedItemsAll:
             selectedItems += i
