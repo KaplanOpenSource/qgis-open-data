@@ -265,11 +265,14 @@ class OpenDataLoader:
 
         if dataList['type'] == 'paid':
             self.dlg.versionLabel.setText('גרסה מסחרית')
+            self.dlg.teaserLabel.hide()
             #self.mb.pushInfo('ביצעת עד כה {} חיבורים'.format(dataList['logins']),"")
             self.dlg.loginsCounter.setText('ביצעת עד כה\n {} חיבורים'.format(dataList['logins']))
 
         if dataList['type'] == 'free':
             self.dlg.versionLabel.setText('גרסה חינמית')
+            self.dlg.teaserLabel.show()
+            self.dlg.teaserLabel.setText('זמין בגרסה המסחרית')
             self.dlg.loginsCounter.setText('ביצעת עד כה\n {} חיבורים'.format(dataList['logins']))
                 
         return dataList['data']
@@ -281,7 +284,8 @@ class OpenDataLoader:
         """
         self.dlg.govTree.clear()
         self.dlg.muniTree.clear()
-        
+        self.dlg.orgTree.clear()
+        self.dlg.opendataTree.clear()
         
         self.dlg.govTree.setSelectionMode(QAbstractItemView.MultiSelection)  
         self.dlg.muniTree.setSelectionMode(QAbstractItemView.MultiSelection)  
@@ -849,6 +853,7 @@ class OpenDataLoader:
         if self.first_start:
             self.first_start = False
             self.dlg = opendata_loaderDialog()
+            self.dlg.teaserLabel.hide()
             self.loadCredentials()
         else:
             self.loadCredentials()
