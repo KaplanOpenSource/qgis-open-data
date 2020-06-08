@@ -242,7 +242,10 @@ class OpenDataLoader:
 
     def buildDataList(self):
         
-        dataList = codecs.decode(self.checkCredentials().decode('utf-8'),'rot_13')
+        try:
+            dataList = codecs.decode(self.checkCredentials().decode('utf-8'),'rot_13')
+        except:
+            self.mb.pushCritical('תקלת חיבור', 'נראה שיש תקלה בחיבור לשרת, נא לדווח על השגיאה')
         dataList = json.loads(dataList)
         if dataList['type'] == 'overLimit':
             self.mb.pushWarning('אזהרה', 'עברת את כמות החיבורים עליהם שילמת, על מנת לקבל את רשימת המקורות המלאה יש להירשם לעוד חיבורים.')
@@ -305,7 +308,12 @@ class OpenDataLoader:
         userCreds = {'email':userEmail, 'key':userKey}
         self.store()
         response = rq.post("https://qgis-plugin.kaplanopensource.co.il/json",userCreds)
-        return zlib.decompress(response.content)
+        try:
+            obj = zlib.decompress(response.content)
+        except zlib.error:
+            response = rq.post("https://qgis-plugin.kaplanopensource.co.il/json",userCreds, timeout=30)
+            obj = zlib.decompress(response.content)
+        return obj
         
     def store(self):
         s = QgsSettings()
