@@ -1,29 +1,35 @@
-
 [general]
 name=Israel Open Data Loader
 qgisMinimumVersion=3.0
-description=QGIS plugin to ease loading open data resources
-version=0.3.0
-author=Kaplan Open Source Consulting Inc.
+qgisMaximumVersion=3.99
+description=Easy access and loading of Israeli open data resources
+about=This plugin enables you to quickly add Israeli open data resources. We support Government ministries and agencies, Municipalities (paid version only), NGO / non-profits and Open Data websites.
+version=0.4.0
+author=Kaplan Open Source Inc.
 email=lior@kaplanopensource.co.il
-about=The plugin enables you to add some Israeli open data sources, either permanantly to your browser or temporarly to your project. הפלאגין מאפשר הוספה של שכבות מידע פתוחות מארגונים ישראליים, חלקן באופן קבוע לחלונית ההוספה וחלקן רק למשטח העבודה בפרוייקט הנוכחי, בהתאם למקור המידע.
-tracker=https://github.com/KaplanOpenSource/qgis-open-data-loader/issues
-repository=https://github.com/KaplanOpenSource/qgis-open-data-loader
 # End of mandatory metadata
 
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog=2020-04-01 OpenData Loader 0.3.0:
-			Split sources to an external service, so data could get updated
-			frequently.
+changelog=
+	2020-06-08 OpenData Loader 0.4.0:
+		Add OpenData Tab
+		Support URLs with zipped SHP files
+		Improve error handling / reporting
+		Improve notifications for free/commercial versions
+	2020-04-01 OpenData Loader 0.3.0:
+		Split sources to an external service, so data could get updated
+		frequently.
 
 # Tags are comma separated with spaces allowed
-tags=wms, wfs, webservice, python, open data
+tags=wms, wfs, webservice, python, open data, Israel
 
 homepage=https://kaplanopensource.co.il/
-category=Web
+tracker=https://github.com/KaplanOpenSource/qgis-open-data-loader/issues
+repository=https://github.com/KaplanOpenSource/qgis-open-data-loader
 icon=icon.png
+category=Web
 # experimental flag
 experimental=False
 
