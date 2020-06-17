@@ -26,8 +26,8 @@ changelog=
 tags=wms, wfs, webservice, python, open data, Israel
 
 homepage=https://kaplanopensource.co.il/
-tracker=https://github.com/KaplanOpenSource/qgis-open-data-loader/issues
-repository=https://github.com/KaplanOpenSource/qgis-open-data-loader
+tracker=https://github.com/KaplanOpenSource/qgis-open-data/issues
+repository=https://github.com/KaplanOpenSource/qgis-open-data
 icon=icon.png
 category=Web
 # experimental flag
