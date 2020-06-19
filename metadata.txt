@@ -25,7 +25,7 @@ changelog=
 # Tags are comma separated with spaces allowed
 tags=wms, wfs, webservice, python, open data, Israel
 
-homepage=https://kaplanopensource.co.il/
+homepage=https://kaplanopensource.co.il/services/qgis/
 tracker=https://github.com/KaplanOpenSource/qgis-open-data/issues
 repository=https://github.com/KaplanOpenSource/qgis-open-data
 icon=icon.png
