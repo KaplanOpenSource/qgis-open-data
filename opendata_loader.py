@@ -80,7 +80,7 @@ class OpenDataLoader:
         # Declare instance attributes
         self.actions = []
         
-        self.menu = self.tr(u'&Israel Open Data Sources')
+        self.menu = self.tr(u'&Israeli Open Data Sources')
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -194,7 +194,7 @@ class OpenDataLoader:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginWebMenu(
-                self.tr(u'&Israel Open Data Sources'),
+                self.tr(u'&Israeli Open Data Sources'),
                 action)
             self.iface.removeToolBarIcon(action)
             

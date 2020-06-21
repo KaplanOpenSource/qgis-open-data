@@ -1,5 +1,5 @@
 [general]
-name=Israel Open Data Loader
+name=Israeli Open Data Loader
 qgisMinimumVersion=3.0
 qgisMaximumVersion=3.99
 description=Easy access and loading of Israeli open data resources
