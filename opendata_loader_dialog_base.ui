@@ -92,7 +92,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap resource="resources.qrc">:/plugins/opendata_loader/logo.png</pixmap>
+    <pixmap>:/plugins/opendata_loader/logo.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -206,6 +206,9 @@
      <property name="layoutDirection">
       <enum>Qt::RightToLeft</enum>
      </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
      <property name="columnCount">
       <number>1</number>
      </property>
@@ -234,6 +237,9 @@
      </property>
      <property name="layoutDirection">
       <enum>Qt::RightToLeft</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
      </property>
      <property name="columnCount">
       <number>1</number>
@@ -411,6 +417,9 @@ background-color: rgba(131, 131, 131,0.4);
      <property name="layoutDirection">
       <enum>Qt::RightToLeft</enum>
      </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
      <property name="columnCount">
       <number>1</number>
      </property>
@@ -439,6 +448,9 @@ background-color: rgba(131, 131, 131,0.4);
      </property>
      <property name="layoutDirection">
       <enum>Qt::RightToLeft</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
      </property>
      <property name="columnCount">
       <number>1</number>

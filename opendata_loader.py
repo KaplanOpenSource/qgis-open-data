@@ -21,7 +21,7 @@
 """
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt, QSize, QUrl
 from PyQt5.QtGui import QIcon, QPixmap, QDesktopServices
-from PyQt5.QtWidgets import QAction, QTreeWidgetItem, QAbstractItemView, QHBoxLayout, QPushButton
+from PyQt5.QtWidgets import QAction, QTreeWidgetItem, QAbstractItemView, QHBoxLayout, QPushButton, QTreeWidget
 import requests as rq
 import json
 import zlib
@@ -54,7 +54,7 @@ class OpenDataLoader:
         self.iface = iface
         self.mb = self.iface.messageBar()
         self.dlg = opendata_loaderDialog()
-        
+        self.curMode = 2
         
         
         #self.dlg.treeView.headerItem().setText(0, "Gov Orgs")
@@ -292,7 +292,6 @@ class OpenDataLoader:
         self.dlg.orgTree.setSelectionMode(QAbstractItemView.MultiSelection)
         self.dlg.opendataTree.setSelectionMode(QAbstractItemView.MultiSelection)
         self.dataList = self.buildDataList()
-        self.curMode = 2
         if "govOrgs" in self.dataList and len(self.dataList["govOrgs"]) > 0:
             orgI = -1
             for (orgI, org) in enumerate(self.dataList["govOrgs"].values()):
@@ -347,6 +346,7 @@ class OpenDataLoader:
 
                 self.dlg.opendataTree.insertTopLevelItems(odsI, [odsItem])
                 self.dlg.opendataTree.sortItems(0,Qt.AscendingOrder)
+        self.setSelectionType()
                 
     def checkCredentials(self):
         s = QgsSettings()
@@ -648,11 +648,14 @@ class OpenDataLoader:
         group = self.dlg.addAsGroup.isChecked()
         
         selectedItemsAll = []
-        
         selectedItemsAll.append(self.dlg.govTree.selectedItems())
         selectedItemsAll.append(self.dlg.muniTree.selectedItems())
         selectedItemsAll.append(self.dlg.orgTree.selectedItems())
         selectedItemsAll.append(self.dlg.opendataTree.selectedItems())
+        if self.curMode == 1:
+            selectedItemsAll = []
+            selectedItemsAll.append(self.dlg.tabWidget.currentWidget().findChildren(QTreeWidget)[0].selectedItems())
+
         selectedItems = []
         for i in selectedItemsAll:
             selectedItems += i
@@ -753,6 +756,7 @@ class OpenDataLoader:
             self.mb.pushInfo('{} Layers added'.format(str(layersAdded)),"")
         else:
             self.mb.pushInfo('No layers to add',"")
+        self.clearSelection()
             
     
     def drawTempRLayer(self, selectedLayers, group, allGroup):
@@ -780,6 +784,7 @@ class OpenDataLoader:
             self.mb.pushInfo('{} Layers added'.format(str(layersAdded)),"")
         else:
             self.mb.pushInfo('No layers to add',"")
+        self.clearSelection()
         
     
     
@@ -846,6 +851,7 @@ class OpenDataLoader:
                 break
         if layersAdded > 0:
             self.mb.pushInfo('{} Layers Added'.format(str(layersAdded)),"")
+        self.clearSelection()
 
     def run(self):
         """Run method that performs all the real work"""
