@@ -4,7 +4,7 @@ qgisMinimumVersion=3.0
 qgisMaximumVersion=3.99
 description=Easy access and loading of Israeli open data resources
 about=This plugin enables you to quickly add Israeli open data resources. We support Government ministries and agencies, Municipalities (paid version only), NGO / non-profits and Open Data websites.
-version=0.4.0
+version=0.4.1
 author=Kaplan Open Source Inc.
 email=lior@kaplanopensource.co.il
 # End of mandatory metadata
@@ -13,6 +13,9 @@ email=lior@kaplanopensource.co.il
 
 # Uncomment the following line and add your changelog:
 changelog=
+	2020-06-23 OpenData Loader 0.4.1:
+		Disable multi layer selection by default
+		Fix error in dataload on slow networks in 0.4.0
 	2020-06-08 OpenData Loader 0.4.0:
 		Add OpenData Tab
 		Support URLs with zipped SHP files
