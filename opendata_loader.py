@@ -249,10 +249,9 @@ class OpenDataLoader:
     def buildDataList(self):
         
         try:
-            dataList = codecs.decode(self.checkCredentials().decode('utf-8'),'rot_13')
+            dataList = json.loads(codecs.decode(self.checkCredentials().decode('utf-8'),'rot_13'))
         except:
             self.mb.pushCritical('תקלת חיבור', 'נראה שיש תקלה בחיבור לשרת, נא לדווח על השגיאה')
-        dataList = json.loads(dataList)
         if dataList['type'] == 'overLimit':
             self.mb.pushWarning('אזהרה', 'עברת את כמות החיבורים עליהם שילמת, על מנת לקבל את רשימת המקורות המלאה יש להירשם לעוד חיבורים.')
             #self.mb.pushInfo('ביצעת עד כה {} חיבורים'.format(dataList['logins']),"")
