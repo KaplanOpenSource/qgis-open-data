@@ -19,15 +19,17 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt, QSize, QUrl
+from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt, QSize, QUrl, QByteArray
 from PyQt5.QtGui import QIcon, QPixmap, QDesktopServices
 from PyQt5.QtWidgets import QAction, QTreeWidgetItem, QAbstractItemView, QHBoxLayout, QPushButton, QTreeWidget
+from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkProxy
 import requests as rq
 import json
 import zlib
 import codecs
 import os # This is is needed in the pyqgis console also
-from qgis.core import QgsVectorLayer, QgsRasterLayer, Qgis, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup, QgsSettings
+from qgis.core import QgsVectorLayer, QgsRasterLayer, Qgis, QgsProject, QgsLayerTreeLayer, QgsLayerTreeGroup, QgsSettings,QgsNetworkAccessManager,QgsError
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
@@ -346,19 +348,49 @@ class OpenDataLoader:
                 self.dlg.opendataTree.insertTopLevelItems(odsI, [odsItem])
                 self.dlg.opendataTree.sortItems(0,Qt.AscendingOrder)
         self.setSelectionType()
-                
+
     def checkCredentials(self):
-        s = QgsSettings()
-        userEmail = self.dlg.emailInput.text()
-        userKey = self.dlg.keyInput.text()
-        userCreds = {'email':userEmail, 'key':userKey}
-        self.store()
-        response = rq.post("https://qgis-plugin.kaplanopensource.co.il/json",userCreds)
         try:
-            obj = zlib.decompress(response.content)
-        except zlib.error:
-            response = rq.post("https://qgis-plugin.kaplanopensource.co.il/json",userCreds, timeout=30)
-            obj = zlib.decompress(response.content)
+            s = QgsSettings()
+            proxy = QNetworkProxy()
+            proxyEnabled = s.value("proxy/proxyEnabled", "")
+            proxyType = s.value("proxy/proxyType", "" )
+            proxyHost = s.value("proxy/proxyHost", "" )
+            proxyPort = s.value("proxy/proxyPort", "" )
+            proxyUser = s.value("proxy/proxyUser", "" )
+            proxyPassword = s.value("proxy/proxyPassword", "" )
+            if proxyEnabled == "true":
+                proxy.setType(QNetworkProxy.HttpProxy)
+                proxy.setHostName(proxyHost)
+                if proxyPort != "":
+                    proxy.setPort(int(proxyPort))
+                proxy.setUser(proxyUser)
+                proxy.setPassword(proxyPassword)
+                QNetworkProxy.setApplicationProxy(proxy)
+                self.QNM.setupDefaultProxyAndCache()
+                self.QNM.setFallbackProxyAndExcludes(proxy,[""],[""])
+            self.QNM = QgsNetworkAccessManager()
+            self.QNM.setTimeout(20000)
+            data = QByteArray()
+            userEmail = self.dlg.emailInput.text()
+            userKey = self.dlg.keyInput.text()
+            userCreds = {'email':userEmail, 'key':userKey}
+            data.append('email').append('=').append(userEmail).append("&")
+            data.append('key').append('=').append(userKey).append("&")
+            request = QNetworkRequest(QUrl("https://qgis-plugin.kaplanopensource.co.il/json"))
+            headerKey = QByteArray()
+            headerKey.append("Agent")
+            headerVal = QByteArray()
+            headerVal.append("QGIS")
+            request.setRawHeader(headerKey, headerVal)
+            self.reply = self.QNM.blockingPost(request, data)
+            obj = zlib.decompress(self.reply.content())
+            self.store()
+        except Exception as e:
+            error = QgsError("התרחשה תקלה בחיבור נא להעביר את ההודעה המצורפת","תקלה")
+            error.append(str(e),"תקלת חיבור")
+            QgsErrorDialog(error,"network error").show(error,"Israeli Open Data Loader Network Error")
+            raise Exception
         return obj
         
     def store(self):
@@ -567,11 +599,11 @@ class OpenDataLoader:
 
     def addTempShapefile(self, layer, group=False, allGroup=None):
         url = layer["layerUrl"]
+        request = QNetworkRequest(QUrl(url))
         if "header" in layer:
-            response = rq.get(url,headers={"user-agent":layer["header"]})
-        else:
-            response = rq.get(url)
-        with zipfile.ZipFile(io.BytesIO(response.content)) as thezip:
+            request.setRawHeader("user-agent", layer["header"])
+        response = self.QNM.blockingGet(request)
+        with zipfile.ZipFile(io.BytesIO(response.content())) as thezip:
             f = tempfile.TemporaryDirectory()
             if not os.path.isdir(f.name):
                 os.mkdir(f.name)
