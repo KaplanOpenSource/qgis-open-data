@@ -252,29 +252,34 @@ class OpenDataLoader:
         
         try:
             dataList = json.loads(codecs.decode(self.checkCredentials().decode('utf-8'),'rot_13'))
+
+            if dataList and dataList['type'] == 'paid':
+                self.dlg.teaserGov.hide()
+                self.dlg.teaserMuni.hide()
+                self.dlg.versionLabel.setText('גרסה בתשלום')
+            else:
+                self.dlg.versionLabel.setText('גרסה חינמית')
+
+            if dataList and dataList['type'] == 'free':
+                self.dlg.teaserGov.hide()
+                self.dlg.teaserMuni.setText('זמין בגרסה בתשלום')
+
+            if dataList and dataList['type'] == 'overLimit':
+                self.mb.pushWarning('אזהרה', 'הגעת למגבלת השימוש החודשית, ניתן ליצור קשר להרחבת השימוש.')
+                self.dlg.teaserGov.setText('מגבלת שימוש עברה')
+                self.dlg.teaserMuni.setText('זמין בגרסה בתשלום')
+
+            if dataList and dataList['type'] == 'notRegistered':
+                self.dlg.versionLabel.setText('משתמש לא רשום')
+                self.mb.pushWarning('אזהרה', 'עליך להירשם על מנת לראות ארגונים ממשלתיים.')
+                self.dlg.teaserGov.setText('זמין למשתמשים רשומים')
+                self.dlg.teaserMuni.setText('זמין בגרסה בתשלום')
+            else:
+                self.dlg.loginsCounter.setText('החודש התחברת\n{} פעמים'.format(dataList['logins']))
+
         except:
-            self.mb.pushCritical('תקלת חיבור', 'נראה שיש תקלה בחיבור לשרת, נא לדווח על השגיאה')
-        if dataList['type'] == 'overLimit':
-            self.mb.pushWarning('אזהרה', 'עברת את כמות החיבורים עליהם שילמת, על מנת לקבל את רשימת המקורות המלאה יש להירשם לעוד חיבורים.')
-            #self.mb.pushInfo('ביצעת עד כה {} חיבורים'.format(dataList['logins']),"")
-            self.dlg.loginsCounter.setText('ביצעת עד כה\n {} חיבורים'.format(dataList['logins']))
-            self.dlg.versionLabel.setText('גרסה חינמית')
-
-        if dataList['type'] == 'notRegistered':
-            self.mb.pushWarning('Warning', 'עליך להירשם על מנת להשתמש לקבל חיבורים לפלאגין')
-            dataList['data'] = {"govOrgs":{},"municipalities":{}}    
-
-        if dataList['type'] == 'paid':
-            self.dlg.versionLabel.setText('גרסה מסחרית')
-            self.dlg.teaserLabel.hide()
-            #self.mb.pushInfo('ביצעת עד כה {} חיבורים'.format(dataList['logins']),"")
-            self.dlg.loginsCounter.setText('ביצעת עד כה\n {} חיבורים'.format(dataList['logins']))
-
-        if dataList['type'] == 'free':
-            self.dlg.versionLabel.setText('גרסה חינמית')
-            self.dlg.teaserLabel.show()
-            self.dlg.teaserLabel.setText('זמין בגרסה המסחרית')
-            self.dlg.loginsCounter.setText('ביצעת עד כה\n {} חיבורים'.format(dataList['logins']))
+            self.mb.pushMessage('תקלת חיבור','נראה שיש תקלה בחיבור לשרת, נא לדווח על השגיאה',Qgis.Warning, 5)
+            raise Exception
                 
         return dataList['data']
     
@@ -890,7 +895,6 @@ class OpenDataLoader:
         if self.first_start:
             self.first_start = False
             self.dlg = opendata_loaderDialog()
-            self.dlg.teaserLabel.hide()
             self.loadCredentials()
         else:
             self.loadCredentials()
