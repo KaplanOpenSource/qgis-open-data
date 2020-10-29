@@ -13,17 +13,18 @@ email=lior@kaplanopensource.co.il
 
 # Uncomment the following line and add your changelog:
 changelog=
-	2020-06-23 OpenData Loader 0.4.1:
-		Disable multi layer selection by default
-		Fix error in dataload on slow networks in 0.4.0
-	2020-06-08 OpenData Loader 0.4.0:
-		Add OpenData Tab
-		Support URLs with zipped SHP files
-		Improve error handling / reporting
-		Improve notifications for free/commercial versions
-	2020-04-01 OpenData Loader 0.3.0:
-		Split sources to an external service, so data could get updated
-		frequently.
+ 2020-06-23 Version 0.4.1:
+ * Disable multi layer selection by default
+ * Fix error in dataload on slow networks in 0.4.0
+
+ 2020-06-08 Version 0.4.0:
+ * Add OpenData Tab
+ * Support URLs with zipped SHP files
+ * Improve error handling / reporting
+ * Improve notifications for free/commercial versions
+
+ 2020-04-01 Version 0.3.0:
+ * Split sources to an external service, so data could get updated frequently.
 
 # Tags are comma separated with spaces allowed
 tags=wms, wfs, webservice, python, open data, Israel
