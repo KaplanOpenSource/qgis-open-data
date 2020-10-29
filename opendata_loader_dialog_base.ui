@@ -192,7 +192,7 @@
    </property>
    <widget class="QWidget" name="govTab">
     <attribute name="title">
-     <string>ארגונים ומשרדי ממשלה</string>
+     <string>ארגונים ממשלתיים</string>
     </attribute>
     <widget class="QTreeWidget" name="govTree">
      <property name="geometry">
@@ -686,7 +686,7 @@ background-color: rgba(131, 131, 131,0.4);
          </size>
         </property>
         <property name="text">
-         <string>מפתח משתמש</string>
+         <string>מפתח גישה</string>
         </property>
        </widget>
       </item>
