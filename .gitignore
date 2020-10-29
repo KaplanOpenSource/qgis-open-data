@@ -1,5 +1,6 @@
 israeli_opendata_loader.zip
 Makefile
-pb_tool.cfg
 plugin_upload.py
 pylintrc
+resources.py
+zip_build/

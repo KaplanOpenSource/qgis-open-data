@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/plugins/israeli_opendata_loader" >
+        <file>icon.png</file>
+        <file>logo.png</file>
+		<folder>sources</folder>
+    </qresource>
+</RCC>
