@@ -35,7 +35,7 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Browserהוספה קבועה ל</string>
+       <string>Browser-הוספה קבועה ל</string>
       </property>
      </widget>
     </item>
@@ -61,7 +61,7 @@
        </sizepolicy>
       </property>
       <property name="whatsThis">
-       <string>הוספה של השכבהשכבות שנבחרו למפה כשכבה זמנית בפורמט וקטור אשר מאפשר עריכה ושמירה מחדש לפורמטים כמו GeoPackge וShapeFile.</string>
+       <string>הוספה של השכבות שנבחרו למפה כשכבה זמנית בפורמט וקטור אשר מאפשר עריכה ושמירה מחדש לפורמטים כמו GeoPackge ו-ShapeFile.</string>
       </property>
       <property name="text">
        <string>הוספה כשכבה וקטורית</string>
