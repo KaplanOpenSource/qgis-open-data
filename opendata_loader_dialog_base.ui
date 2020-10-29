@@ -92,7 +92,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>:/plugins/opendata_loader/logo.png</pixmap>
+    <pixmap>:/plugins/israeli_opendata_loader/logo.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
