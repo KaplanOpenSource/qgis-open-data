@@ -4,7 +4,7 @@ qgisMinimumVersion=3.0
 qgisMaximumVersion=3.99
 description=Easy access and loading of Israeli open data resources
 about=This plugin enables you to quickly add Israeli open data resources. We support Government ministries and agencies, Municipalities (paid version only), NGO / non-profits and Open Data websites.
-version=0.5.0
+version=0.5.1
 author=Kaplan Open Source Inc.
 email=lior@kaplanopensource.co.il
 # End of mandatory metadata
@@ -13,6 +13,10 @@ email=lior@kaplanopensource.co.il
 
 # Uncomment the following line and add your changelog:
 changelog=
+ 2020-11-01 Version 0.5.1
+ * Fix typo in proxy definition.
+ * Catch error when user tries to add layer before selecting one.
+
  2020-10-29 Version 0.5.0
  * Add support for proxy connections in government oraganizations.
  * Show NGOs and Open Data websites tabs for unregistered users.
