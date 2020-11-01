@@ -364,6 +364,8 @@ class OpenDataLoader:
             proxyPort = s.value("proxy/proxyPort", "" )
             proxyUser = s.value("proxy/proxyUser", "" )
             proxyPassword = s.value("proxy/proxyPassword", "" )
+            self.QNM = QgsNetworkAccessManager()
+            self.QNM.setTimeout(20000)
             if proxyEnabled == "true":
                 proxy.setType(QNetworkProxy.HttpProxy)
                 proxy.setHostName(proxyHost)
@@ -374,8 +376,6 @@ class OpenDataLoader:
                 QNetworkProxy.setApplicationProxy(proxy)
                 self.QNM.setupDefaultProxyAndCache()
                 self.QNM.setFallbackProxyAndExcludes(proxy,[""],[""])
-            self.QNM = QgsNetworkAccessManager()
-            self.QNM.setTimeout(20000)
             data = QByteArray()
             userEmail = self.dlg.emailInput.text()
             userKey = self.dlg.keyInput.text()
