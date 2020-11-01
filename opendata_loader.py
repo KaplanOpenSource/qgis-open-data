@@ -867,11 +867,11 @@ class OpenDataLoader:
                 seen.add(t)
                 new_l.append(d)
         selectedLayers = new_l
+        layersAdded = 0
         for layer in selectedLayers:
             layerUrl = layer["layerUrl"]
             layerName = layer["layerPermHebName"]
             connectionType = layer["connectionType"]
-            layersAdded = 0
             if connectionType == 'connections-arcgisfeatureserver':
                 self.addPermanentArcgisFeature(layerUrl, layerName)
                 layersAdded +=1
@@ -887,6 +887,8 @@ class OpenDataLoader:
                 break
         if layersAdded > 0:
             self.mb.pushInfo('{} Layers Added'.format(str(layersAdded)),"")
+        else:
+            self.mb.pushInfo('No layers to add',"")
         self.clearSelection()
 
     def run(self):
