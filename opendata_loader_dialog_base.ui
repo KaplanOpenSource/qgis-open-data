@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>647</width>
-    <height>693</height>
+    <height>695</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -101,9 +101,9 @@
   <widget class="QLabel" name="header">
    <property name="geometry">
     <rect>
-     <x>410</x>
+     <x>379</x>
      <y>10</y>
-     <width>210</width>
+     <width>241</width>
      <height>61</height>
     </rect>
    </property>
@@ -821,8 +821,20 @@ background-color: rgba(131, 131, 131,0.4);
     <string>אנחנו מנגישים מידע ממקורות שונים. המידע מסופק כמות שהוא, ואין אנו אחראים לטיבו או לדיוקו.</string>
    </property>
   </widget>
+  <widget class="QLabel" name="vLabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>670</y>
+     <width>91</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>v.</string>
+   </property>
+  </widget>
  </widget>
- <resources>
- </resources>
+ <resources/>
  <connections/>
 </ui>

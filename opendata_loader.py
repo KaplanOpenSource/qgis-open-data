@@ -64,6 +64,9 @@ class OpenDataLoader:
         
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+        f = open(os.path.join(self.plugin_dir,"metadata.txt"), "r")
+        lines = f.readlines()
+        self.version = 'v'+ [line for line in lines if line.startswith("version")][0][:-1].split("=")[1]
         # initialize locale
         """
         locale = QSettings().value('locale/userLocale')[0:2]
@@ -908,7 +911,8 @@ class OpenDataLoader:
         self.dlg.addToMapV.clicked.connect(self.loadTemps)
         self.dlg.addToMapR.clicked.connect(self.loadTemps)
         self.dlg.addPerm.clicked.connect(self.addToBrowser)
-        
+        self.dlg.vLabel.setText(self.version)
+
         self.dlg.selectionButton.clicked.connect(self.setSelectionType)
         self.clearSelection()
         self.dlg.show()
