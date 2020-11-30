@@ -57,7 +57,7 @@ class OpenDataLoader:
         self.mb = self.iface.messageBar()
         self.dlg = opendata_loaderDialog()
         self.curMode = 2
-        
+        self.headers = {"Agent":"QGIS"}
         
         #self.dlg.treeView.headerItem().setText(0, "Gov Orgs")
         
@@ -285,7 +285,70 @@ class OpenDataLoader:
             raise Exception
                 
         return dataList['data']
-    
+
+    def getWithProxy(self, url, headers=None):
+        s = QgsSettings()
+        proxy = QNetworkProxy()
+        proxyEnabled = s.value("proxy/proxyEnabled", "")
+        proxyType = s.value("proxy/proxyType", "" )
+        proxyHost = s.value("proxy/proxyHost", "" )
+        proxyPort = s.value("proxy/proxyPort", "" )
+        proxyUser = s.value("proxy/proxyUser", "" )
+        proxyPassword = s.value("proxy/proxyPassword", "" )
+        if not self.QNM:
+            self.QNM = QgsNetworkAccessManager()
+        self.QNM.setTimeout(20000)
+        if proxyEnabled == "true":
+            proxy.setType(QNetworkProxy.HttpProxy)
+            proxy.setHostName(proxyHost)
+            if proxyPort != "":
+                proxy.setPort(int(proxyPort))
+            proxy.setUser(proxyUser)
+            proxy.setPassword(proxyPassword)
+            QNetworkProxy.setApplicationProxy(proxy)
+            self.QNM.setupDefaultProxyAndCache()
+            self.QNM.setFallbackProxyAndExcludes(proxy,[""],[""])
+        request = QNetworkRequest(QUrl(url))
+        if headers:
+            for header in headers.keys():
+                request.setRawHeader(header, headers[header])
+        reply = self.QNM.blockingGet(request)
+        return reply.content().data()
+
+    def postWithProxy(self, url, headers=None, data=None):
+        s = QgsSettings()
+        proxy = QNetworkProxy()
+        proxyEnabled = s.value("proxy/proxyEnabled", "")
+        proxyType = s.value("proxy/proxyType", "" )
+        proxyHost = s.value("proxy/proxyHost", "" )
+        proxyPort = s.value("proxy/proxyPort", "" )
+        proxyUser = s.value("proxy/proxyUser", "" )
+        proxyPassword = s.value("proxy/proxyPassword", "" )
+        self.QNM = QgsNetworkAccessManager()
+        self.QNM.setTimeout(20000)
+        if proxyEnabled == "true":
+            proxy.setType(QNetworkProxy.HttpProxy)
+            proxy.setHostName(proxyHost)
+            if proxyPort != "":
+                proxy.setPort(int(proxyPort))
+            proxy.setUser(proxyUser)
+            proxy.setPassword(proxyPassword)
+            QNetworkProxy.setApplicationProxy(proxy)
+            self.QNM.setupDefaultProxyAndCache()
+            self.QNM.setFallbackProxyAndExcludes(proxy,[""],[""])
+        request = QNetworkRequest(QUrl(url))
+        if headers:
+            for header in headers.keys():
+                headerKey = QByteArray()
+                headerKey.append(header)
+                headerVal = QByteArray()
+                headerVal.append(headers[header])
+                request.setRawHeader(headerKey, headerVal)
+        postdata = QByteArray()
+        if data:
+            for key in data.keys():
+                postdata.append(key).append('=').append(data[key]).append("&")
+        return self.QNM.blockingPost(request, postdata)
 
     def loadLayers(self):
         """
@@ -359,39 +422,10 @@ class OpenDataLoader:
 
     def checkCredentials(self):
         try:
-            s = QgsSettings()
-            proxy = QNetworkProxy()
-            proxyEnabled = s.value("proxy/proxyEnabled", "")
-            proxyType = s.value("proxy/proxyType", "" )
-            proxyHost = s.value("proxy/proxyHost", "" )
-            proxyPort = s.value("proxy/proxyPort", "" )
-            proxyUser = s.value("proxy/proxyUser", "" )
-            proxyPassword = s.value("proxy/proxyPassword", "" )
-            self.QNM = QgsNetworkAccessManager()
-            self.QNM.setTimeout(20000)
-            if proxyEnabled == "true":
-                proxy.setType(QNetworkProxy.HttpProxy)
-                proxy.setHostName(proxyHost)
-                if proxyPort != "":
-                    proxy.setPort(int(proxyPort))
-                proxy.setUser(proxyUser)
-                proxy.setPassword(proxyPassword)
-                QNetworkProxy.setApplicationProxy(proxy)
-                self.QNM.setupDefaultProxyAndCache()
-                self.QNM.setFallbackProxyAndExcludes(proxy,[""],[""])
-            data = QByteArray()
             userEmail = self.dlg.emailInput.text()
             userKey = self.dlg.keyInput.text()
             userCreds = {'email':userEmail, 'key':userKey}
-            data.append('email').append('=').append(userEmail).append("&")
-            data.append('key').append('=').append(userKey).append("&")
-            request = QNetworkRequest(QUrl("https://qgis-plugin.kaplanopensource.co.il/json"))
-            headerKey = QByteArray()
-            headerKey.append("Agent")
-            headerVal = QByteArray()
-            headerVal.append("QGIS")
-            request.setRawHeader(headerKey, headerVal)
-            self.reply = self.QNM.blockingPost(request, data)
+            self.reply = self.postWithProxy("https://qgis-plugin.kaplanopensource.co.il/json", self.headers, userCreds)
             obj = zlib.decompress(self.reply.content())
             self.store()
         except Exception as e:
@@ -423,13 +457,11 @@ class OpenDataLoader:
         url = layer["layerUrl"]
         metdataUrl = "{}?f=pjson".format(url)
         try:
-            infoResponse = rq.get(metdataUrl, verify=False)
-            #return infoResponse
+            data = json.loads(self.getWithProxy(metdataUrl))
         except rq.exceptions.SSLError:
             self.mb.pushCritical('SSL Error'," could not get layers from url")
             return "error"
         else:
-            data = infoResponse.json()
             if crs is None:
                 spatialReference = data.get("spatialReference", {})
                 latestWkid = spatialReference.get("latestWkid", 3857)
@@ -476,7 +508,7 @@ class OpenDataLoader:
                     allGroup.addLayer(vlayer)
                 else:
                     QgsProject.instance().addMapLayer(vlayer)
-            return infoResponse
+            return data
 
 
     def addTempArcgisMap(self, layer, crs=None, group=False, allGroup=None):
@@ -489,12 +521,11 @@ class OpenDataLoader:
         url = layer["layerUrl"]
         metdataUrl = "{}?f=pjson".format(url)
         try:
-            infoResponse = rq.get(metdataUrl, verify=False)
+            data = json.loads(self.getWithProxy(metdataUrl))
         except rq.exceptions.SSLError:
             self.mb.pushCritical('SSL Error'," could not get layers from url")
             return "error"
         else:
-            data = infoResponse.json()
             if crs is None:
                 spatialReference = data.get("spatialReference", {})
                 latestWkid = spatialReference.get("latestWkid", 3857)
@@ -544,7 +575,7 @@ class OpenDataLoader:
 
     def esriJsonToGeoJson(self, url):
         base_object = {'type': "FeatureCollection",'features':[]}
-        r = rq.get(url, verify=False)
+        r = json.load(self.getWithProxy(metdataUrl))
         esriJson = r.json()
         geomType = esriJson['geometryType']
         if 'spatialRefernce' in esriJson:
@@ -635,11 +666,11 @@ class OpenDataLoader:
             connectionName = name
         else:
             try:
-                infoResponse = rq.get(metdataUrl, verify=False)
+                data = json.loads(self.getWithProxy(metdataUrl))
             except rq.exceptions.SSLError:
                 self.mb.pushCritical('SSL Error'," could not get layers from url")
                 return "error"
-            connectionName = infoResponse.json()["title"]
+            connectionName = data["title"]
         connectionType = "connections-arcgisfeatureserver"
         QSettings().setValue("qgis/%s/%s/password" % (connectionType, connectionName),password)
         QSettings().setValue("qgis/%s/%s/referer" % (connectionType, connectionName), referer)
@@ -654,11 +685,11 @@ class OpenDataLoader:
             connectionName = name
         else:
             try:
-                infoResponse = rq.get(metdataUrl, verify=False)
+                data = json.loads(self.getWithProxy(metdataUrl))
             except rq.exceptions.SSLError:
                 self.mb.pushCritical('SSL Error'," could not get layers from url")
                 return "error"
-            connectionName = infoResponse.json()["title"]
+            connectionName = data["title"]
         connectionType = "connections-arcgismapserver"
         QSettings().setValue("qgis/%s/%s/password" % (connectionType, connectionName),password)
         QSettings().setValue("qgis/%s/%s/referer" % (connectionType, connectionName), referer)
