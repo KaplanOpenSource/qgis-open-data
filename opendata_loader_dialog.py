@@ -24,6 +24,7 @@ import os
 
 from PyQt5 import uic
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import pyqtSignal
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -31,6 +32,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class opendata_loaderDialog(QtWidgets.QDialog, FORM_CLASS):
+    resized = pyqtSignal()
     def __init__(self, parent=None):
         """Constructor."""
         super(opendata_loaderDialog, self).__init__(parent)
@@ -40,3 +42,18 @@ class opendata_loaderDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+
+    def resizeEvent(self, event):
+        self.resized.emit()
+        return super(opendata_loaderDialog, self).resizeEvent(event)
+
+
+FORM2_CLASS, _ = uic.loadUiType(os.path.join(
+os.path.dirname(__file__), 'form.ui'))
+
+class UserServiceDialog(QtWidgets.QDialog, FORM2_CLASS):
+
+   def __init__(self, parent=None):
+      """Constructor."""
+      super(UserServiceDialog, self).__init__(parent)
+      self.setupUi(self)

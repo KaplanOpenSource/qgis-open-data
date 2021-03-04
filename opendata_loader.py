@@ -19,9 +19,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt, QSize, QUrl, QByteArray
+from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QUrl, QByteArray
 from PyQt5.QtGui import QIcon, QPixmap, QDesktopServices
-from PyQt5.QtWidgets import QAction, QTreeWidgetItem, QAbstractItemView, QHBoxLayout, QPushButton, QTreeWidget
+from PyQt5.QtWidgets import QAction, QTreeWidgetItem, QAbstractItemView, QTreeWidget
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkProxy
 import requests as rq
@@ -33,7 +33,7 @@ from qgis.core import QgsVectorLayer, QgsRasterLayer, Qgis, QgsProject, QgsLayer
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
-from .opendata_loader_dialog import opendata_loaderDialog
+from .opendata_loader_dialog import opendata_loaderDialog, UserServiceDialog
 #from .data_sources_list import *
 import os.path
 import io
@@ -56,6 +56,9 @@ class OpenDataLoader:
         self.iface = iface
         self.mb = self.iface.messageBar()
         self.dlg = opendata_loaderDialog()
+        # added form for adding user services
+        self.formdlg = UserServiceDialog()
+        self.populateExistingUserServices()
         self.curMode = 2
         self.headers = {"Agent":"QGIS"}
         
@@ -213,12 +216,19 @@ class OpenDataLoader:
         selectedAll.append(self.dlg.muniTree.selectedItems())
         selectedAll.append(self.dlg.orgTree.selectedItems())
         selectedAll.append(self.dlg.opendataTree.selectedItems())
+        selectedAll.append(self.dlg.userServicesTree.selectedItems())
         selected = []
         for i in selectedAll:
             selected += i
         
         for item in selected:
             item.setSelected(False)
+
+        self.dlg.govTree.clearSelection()
+        self.dlg.muniTree.clearSelection()
+        self.dlg.orgTree.clearSelection()
+        self.dlg.opendataTree.clearSelection()
+        self.dlg.userServicesTree.clearSelection()
             
         
     def setSelectionType(self):
@@ -229,6 +239,7 @@ class OpenDataLoader:
             self.dlg.muniTree.setSelectionMode(QAbstractItemView.SingleSelection)  
             self.dlg.orgTree.setSelectionMode(QAbstractItemView.SingleSelection)
             self.dlg.opendataTree.setSelectionMode(QAbstractItemView.SingleSelection)
+            self.dlg.userServicesTree.setSelectionMode(QAbstractItemView.SingleSelection)
             self.dlg.selectionButton.setText("בחירה בודדת")
             self.curMode = 1
         elif self.curMode == 1:
@@ -236,6 +247,7 @@ class OpenDataLoader:
             self.dlg.muniTree.setSelectionMode(QAbstractItemView.MultiSelection)  
             self.dlg.orgTree.setSelectionMode(QAbstractItemView.MultiSelection)
             self.dlg.opendataTree.setSelectionMode(QAbstractItemView.MultiSelection)
+            self.dlg.userServicesTree.setSelectionMode(QAbstractItemView.MultiSelection)
             self.dlg.selectionButton.setText("בחירה מרובה")
             self.curMode = 2
         
@@ -256,29 +268,46 @@ class OpenDataLoader:
         try:
             dataList = json.loads(codecs.decode(self.checkCredentials().decode('utf-8'),'rot_13'))
 
-            if dataList and dataList['type'] == 'paid':
-                self.dlg.teaserGov.hide()
-                self.dlg.teaserMuni.hide()
-                self.dlg.versionLabel.setText('גרסה בתשלום')
-            else:
-                self.dlg.versionLabel.setText('גרסה חינמית')
+            if dataList:
+                if dataList['type'] == 'paid':
+                    self.dlg.teaserGov.hide()
+                    self.dlg.teaserMuni.hide()
+                    self.dlg.versionLabel.setText('משתמש משלם')
+                else:
+                    self.dlg.versionLabel.setText('משתמש רשום (ללא תשלום)')
 
-            if dataList and dataList['type'] == 'free':
-                self.dlg.teaserGov.hide()
-                self.dlg.teaserMuni.setText('זמין בגרסה בתשלום')
+                if dataList['type'] == 'free':
+                    self.dlg.teaserGov.hide()
+                    self.dlg.teaserMuni.show()
+                    self.dlg.teaserMuni.setText('זמין למשתמשים משלמים')
 
-            if dataList and dataList['type'] == 'overLimit':
-                self.mb.pushWarning('אזהרה', 'הגעת למגבלת השימוש החודשית, ניתן ליצור קשר להרחבת השימוש.')
-                self.dlg.teaserGov.setText('מגבלת שימוש עברה')
-                self.dlg.teaserMuni.setText('זמין בגרסה בתשלום')
+                if dataList['type'] == 'overLimit':
+                    self.mb.pushWarning('אזהרה', 'הגעת למגבלת השימוש החודשית, ניתן ליצור קשר להרחבת השימוש')
+                    self.dlg.teaserGov.show()
+                    self.dlg.teaserGov.setText('עברת את מגבלת השימוש החודשית')
+                    self.dlg.teaserMuni.show()
+                    self.dlg.teaserMuni.setText('זמין למשתמשים משלמים')
 
-            if dataList and dataList['type'] == 'notRegistered':
-                self.dlg.versionLabel.setText('משתמש לא רשום')
-                self.mb.pushWarning('אזהרה', 'עליך להירשם על מנת לראות ארגונים ממשלתיים.')
-                self.dlg.teaserGov.setText('זמין למשתמשים רשומים')
-                self.dlg.teaserMuni.setText('זמין בגרסה בתשלום')
-            else:
-                self.dlg.loginsCounter.setText('החודש התחברת\n{} פעמים'.format(dataList['logins']))
+                if dataList['type'] == 'notRegistered':
+                    self.dlg.versionLabel.setText('משתמש לא רשום')
+                    self.mb.pushInfo('לידיעתך', 'עליך להירשם על מנת לראות ארגונים ממשלתיים')
+                    self.dlg.teaserGov.show()
+                    self.dlg.teaserGov.setText('זמין למשתמשים רשומים')
+                    self.dlg.teaserMuni.show()
+                    self.dlg.teaserMuni.setText('זמין למשתמשים משלמים')
+                    self.dlg.teaserUserServices.show()
+                    self.dlg.teaserUserServices.setText('זמין למשתמשים רשומים')
+                else:
+                    self.dlg.loginsCounter.setText('החודש התחברת\n{} פעמים'.format(dataList['logins']))
+
+                if 'orgName' in dataList:
+                    if len(dataList['orgName']) > 0:
+                        if 'userServices' in dataList['data'] and len(dataList['data']['userServices']) > 0:
+                            self.dlg.teaserUserServices.hide()
+                        else:
+                            self.dlg.teaserUserServices.setText('יש להוסיף סרביס ראשון\n  על מנת לפתוח את הטאב')
+                    else:
+                        self.dlg.teaserUserServices.setText('מוזמנים לפנות אלינו \n על מנת לפתוח את האפשרות')
 
         except:
             self.mb.pushMessage('תקלת חיבור','נראה שיש תקלה בחיבור לשרת, נא לדווח על השגיאה',Qgis.Warning, 5)
@@ -358,6 +387,7 @@ class OpenDataLoader:
         self.dlg.muniTree.clear()
         self.dlg.orgTree.clear()
         self.dlg.opendataTree.clear()
+        self.dlg.userServicesTree.clear()
         
         self.dlg.govTree.setSelectionMode(QAbstractItemView.MultiSelection)  
         self.dlg.muniTree.setSelectionMode(QAbstractItemView.MultiSelection)  
@@ -371,9 +401,8 @@ class OpenDataLoader:
                 layers = org["layers"]
                 for layer in layers:
                     TreeItemName = layer["layerHebName"]
-                    if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
-                        TreeItemName = str(layer["layerHebName"])+" ⛛"
                     layerItem = QTreeWidgetItem(orgItem,[TreeItemName])
+                    self.defineLayerItemIcon(layer,layerItem)
                 self.dlg.govTree.insertTopLevelItems(orgI, [orgItem])
                 self.dlg.govTree.sortItems(0,Qt.AscendingOrder)
         
@@ -384,9 +413,8 @@ class OpenDataLoader:
                 layers = muni["layers"]
                 for layer in layers:
                     TreeItemName = layer["layerHebName"]
-                    if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
-                        TreeItemName = str(layer["layerHebName"])+" ⛛"
                     layerItem = QTreeWidgetItem(muniItem,[TreeItemName])
+                    self.defineLayerItemIcon(layer,layerItem)
 
                 self.dlg.muniTree.insertTopLevelItems(munisI, [muniItem])
                 self.dlg.muniTree.sortItems(0,Qt.AscendingOrder)
@@ -398,9 +426,8 @@ class OpenDataLoader:
                 layers = ngo["layers"]
                 for layer in layers:
                     TreeItemName = layer["layerHebName"]
-                    if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
-                        TreeItemName = str(layer["layerHebName"])+" ⛛"
                     layerItem = QTreeWidgetItem(NGOItem,[TreeItemName])
+                    self.defineLayerItemIcon(layer,layerItem)
 
                 self.dlg.orgTree.insertTopLevelItems(NGOI, [NGOItem])
                 self.dlg.orgTree.sortItems(0,Qt.AscendingOrder)
@@ -412,13 +439,18 @@ class OpenDataLoader:
                 layers = ods["layers"]
                 for layer in layers:
                     TreeItemName = layer["layerHebName"]
-                    if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
-                        TreeItemName = str(layer["layerHebName"])+" ⛛"
                     layerItem = QTreeWidgetItem(odsItem,[TreeItemName])
-
+                    self.defineLayerItemIcon(layer,layerItem)
                 self.dlg.opendataTree.insertTopLevelItems(odsI, [odsItem])
                 self.dlg.opendataTree.sortItems(0,Qt.AscendingOrder)
-        self.setSelectionType()
+
+        if "userServices" in self.dataList and len(self.dataList["userServices"]) > 0:
+            self.dlg.tabWidget.setTabEnabled(4,True)
+            for (LayerI, layer) in enumerate(self.dataList["userServices"]):
+                layerItemName = layer['layerHebName']
+                layerItem = QTreeWidgetItem(None,[layerItemName])
+                self.defineLayerItemIcon(layer,layerItem)
+                self.dlg.userServicesTree.insertTopLevelItems(LayerI, [layerItem])
 
     def checkCredentials(self):
         try:
@@ -427,7 +459,7 @@ class OpenDataLoader:
             userCreds = {'email':userEmail, 'key':userKey}
             self.reply = self.postWithProxy("https://qgis-plugin.kaplanopensource.co.il/json", self.headers, userCreds)
             obj = zlib.decompress(self.reply.content())
-            self.store()
+            self.storeCredentials()
         except Exception as e:
             error = QgsError("התרחשה תקלה בחיבור נא להעביר את ההודעה המצורפת","תקלה")
             error.append(str(e),"תקלת חיבור")
@@ -435,7 +467,7 @@ class OpenDataLoader:
             raise Exception
         return obj
         
-    def store(self):
+    def storeCredentials(self):
         s = QgsSettings()
         userEmail = self.dlg.emailInput.text()
         userKey = self.dlg.keyInput.text()
@@ -449,6 +481,193 @@ class OpenDataLoader:
         self.dlg.emailInput.setText(userEmail)
         self.dlg.keyInput.setText(userKey)
 
+    def addExisting(self):
+        data = self.formdlg.ExistingLayers.currentData()
+        data['layerUrl'] = bytearray(data['layerUrl'],'utf-8').hex()
+        s = QgsSettings()
+        userEmail = s.value('opendata_loader/email','')
+        userKey = s.value('opendata_loader/key','')
+        userCreds = {'email':userEmail, 'key':userKey, 'layer': json.dumps(data, ensure_ascii=False), 'type': 'insert'}
+        self.reply = self.postWithProxy("https://qgis-plugin.kaplanopensource.co.il/service", self.headers, userCreds)
+        if self.reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) == 200:
+            self.loadLayers()
+        else:
+            self.mb.pushMessage('תקלה','התרחשה תקלה בהוספת השכבה',Qgis.Warning, 5)
+
+    def defineLayerItemIcon(self,layer,layerItem):
+        if layer["connectionType"] == 'GeoJSON' or layer["connectionType"] == 'shp':
+            layerItem.setIcon(0,QIcon(":images/themes/default/mIconVector.svg"))
+        if layer["connectionType"] == "connections-arcgismapserver" or layer["connectionType"] == "wms" or layer["connectionType"] == "connections-wms":
+            layerItem.setIcon(0,QIcon(":images/themes/default/mIconWms.svg"))
+        if layer["connectionType"] == "connections-arcgisfeatureserver" or layer["connectionType"] == "wfs" or layer["connectionType"] == "connections-wfs":
+            layerItem.setIcon(0,QIcon(":images/themes/default/mIconWfs.svg"))
+
+    def removeDuplicateUserServices(self, userServices):
+        seen = set()
+        result = []
+        for layer in userServices:
+            key = (layer['layerHebName'], layer['layerUrl'])
+            if key in seen:
+                continue
+
+            result.append(layer)
+            seen.add(key)
+        return result
+
+    def filterServices(self, layer):
+        providerType = layer.providerType()
+        acceptedTypes = ['wms','WFS', 'arcgismapserver', 'arcgisfeatureserver']
+        if providerType in acceptedTypes:
+            return True
+
+    def populateExistingUserServices(self):
+        self.formdlg.ExistingLayers.clear()
+        self.formdlg.ExistingLayers.line_edit = self.formdlg.ExistingLayers.lineEdit()
+        self.formdlg.ExistingLayers.line_edit.setAlignment(Qt.AlignCenter)
+        self.formdlg.ExistingLayers.line_edit.setReadOnly(True)
+
+        mapLayers = QgsProject.instance().mapLayers().values()
+        mapServices = [{'layerHebName':layer.name(),'layerUrl':layer.source(),'tempLayerType':layer.providerType(),'layerCRS':layer.crs().authid() } for layer in mapLayers if self.filterServices(layer)]
+        mapServices = sorted(mapServices, key=lambda k: k['layerHebName'])
+        for layer in mapServices:
+            if layer['tempLayerType'] == 'wms' or layer['tempLayerType'] == 'arcgismapserver':
+                icon = QIcon(":images/themes/default/mIconWms.svg")
+            else:
+                icon = QIcon(":images/themes/default/mIconWfs.svg")
+            name = layer['layerHebName']
+            self.formdlg.ExistingLayers.addItem(icon,name, userData = layer)
+        self.formdlg.ExistingLayers.insertSeparator(len(mapServices))
+        s = QgsSettings()
+        keys = s.allKeys()
+        mapserverKeys = [key for key in keys if key.startswith('qgis/connections-arcgismapserver') or key.startswith('qgis/connections-wms')]
+        featureserverKeys = [key for key in keys if key.startswith('qgis/connections-arcgisfeatureserver') or key.startswith('qgis/connections-wfs')]
+        mapserverservices = list(set([key.split('/')[2] for key in mapserverKeys]))
+        mapserverservices.sort()
+        for service in mapserverservices:
+            selectedKeys = [key for key in mapserverKeys if key.split('/')[2] == service]
+            layerName = service
+            layerUrl = ''
+            for key in selectedKeys:
+                if key.endswith('url'):
+                    layerUrl = s.value(key,'')
+                    continue
+                else:
+                    pass
+            #layerUrl = s.value([key for key in selectedKeys if key.endswith('url')][0],'')
+            tempLayerType = 'arcgismapserver'
+            connectionType = 'connections-arcgismapserver'
+            layer =  {
+                        "connectionType": connectionType,
+                        "layerEngName": layerName,
+                        "layerHebName": layerName,
+                        "layerUrl":layerUrl,
+                        "tempLayerType": tempLayerType
+                    }
+            if len(layerUrl) > 1:
+                self.formdlg.ExistingLayers.addItem(QIcon(":images/themes/default/mIconWms.svg"),service, userData = layer)
+
+        featureserverservices = list(set([key.split('/')[2] for key in featureserverKeys]))
+        featureserverservices.sort()
+        for service in featureserverservices:
+            selectedKeys = [key for key in featureserverKeys if key.split('/')[2] == service]
+            layerName = service
+            layerUrl = ''
+            for key in selectedKeys:
+                if key.endswith('url'):
+                    layerUrl = s.value(key,'')
+                    continue
+                else:
+                    pass
+            #layerUrl = s.value([key for key in selectedKeys if key.endswith('url')][0],'')
+            tempLayerType = 'arcgisfeatureserver'
+            connectionType = 'connections-arcgisfeatureserver'
+            layer =  {
+                        "connectionType": connectionType,
+                        "layerEngName": layerName,
+                        "layerHebName": layerName,
+                        "layerUrl":layerUrl,
+                        "tempLayerType": tempLayerType
+                    }
+            if len(layerUrl) > 1:
+                self.formdlg.ExistingLayers.addItem(QIcon(":images/themes/default/mIconWfs.svg"), service, userData = layer)
+
+    def openUserServicesForm(self):
+        self.populateExistingUserServices()
+        self.formdlg.open()
+
+    def addUserService(self):
+        layerName = self.formdlg.UserLayerHebName.text()
+        layerURL = bytearray(self.formdlg.UserLayerURL.text(),'utf-8').hex()
+        layer = {"layerHebName": layerName,
+            "layerUrl" : layerURL
+            }
+        s = QgsSettings()
+        userEmail = s.value('opendata_loader/email','')
+        userKey = s.value('opendata_loader/key','')
+        userCreds = {'email':userEmail, 'key':userKey, 'layer': json.dumps(layer, ensure_ascii=False), 'type': 'insert'}
+        self.reply = self.postWithProxy("https://qgis-plugin.kaplanopensource.co.il/service", self.headers, userCreds)
+        if self.reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) == 200:
+            self.loadLayers()
+        else:
+            self.mb.pushMessage('תקלה','התרחשה תקלה בהוספת השכבה',Qgis.Warning, 5)
+
+    def addPluginServiceToUserServices(self):
+        if self.curMode == 1:
+            selectedItems = self.dlg.tabWidget.currentWidget().findChildren(QTreeWidget)[0].selectedItems()
+            if len(selectedItems) > 0:
+                selectedItem = self.dlg.tabWidget.currentWidget().findChildren(QTreeWidget)[0].selectedItems()[0]
+            else:
+                self.mb.pushInfo('',"יש לבצע בחירה על מנת להוסיף שירותים")
+                return
+        else:
+            self.mb.pushInfo('', 'ניתן להוסיף רק שירות אחד בכל בחירה')
+            return
+        if self.dlg.tabWidget.currentWidget().objectName() != 'userServicesTab':
+            if selectedItem.parent() is None:
+                self.mb.pushWarning('Warning',"הוספה של ארגונים שלמים אינה נתמכת")
+                return
+
+            parent = selectedItem.parent()
+            parent_text = parent.text(0)
+            layers = []
+            for muni in self.dataList["municipalities"].values():
+                if parent_text == muni["hebName"]:
+                    layers.extend(muni["layers"])
+
+            for govOrg in self.dataList["govOrgs"].values():
+                if parent_text == govOrg["hebName"]:
+                    layers.extend(govOrg["layers"])
+
+            for org in self.dataList["NGO"].values():
+                if parent_text == org["hebName"]:
+                    layers.extend(org["layers"])
+
+            for ods in self.dataList["ods"].values():
+                if parent_text == ods["hebName"]:
+                    layers.extend(ods["layers"])
+
+            for layer in layers:
+                if selectedItem.text(0) == layer["layerHebName"]:
+                    selectedLayer = layer
+
+            layerName = parent_text + ' - ' + selectedLayer["layerHebName"]
+            layerURL = bytearray(selectedLayer["layerUrl"],'utf-8').hex()
+
+            layer = {
+                "layerHebName": layerName,
+                "layerUrl" : layerURL,
+                "tempLayerType": selectedLayer['tempLayerType']
+            }
+            s = QgsSettings()
+            userEmail = s.value('opendata_loader/email','')
+            userKey = s.value('opendata_loader/key','')
+            userCreds = {'email':userEmail, 'key':userKey, 'layer': json.dumps(layer, ensure_ascii=False), 'type': 'insert'}
+            self.reply = self.postWithProxy("https://qgis-plugin.kaplanopensource.co.il/service", self.headers, userCreds)
+            if self.reply.attribute(QNetworkRequest.HttpStatusCodeAttribute) == 200:
+                self.loadLayers()
+            else:
+                self.mb.pushMessage('תקלה','התרחשה תקלה בהוספת השכבה',Qgis.Warning, 5)
+
     def addTempArcgisFeature(self, layer, crs=None, group=False, allGroup=None):
         """
         :param crs: A coordinate reference system, preferebly using EPSG codes.
@@ -458,6 +677,9 @@ class OpenDataLoader:
         metdataUrl = "{}?f=pjson".format(url)
         try:
             data = json.loads(self.getWithProxy(metdataUrl))
+            if 'error' in data:
+                self.mb.pushCritical('Error',"The layer is not available, please report layer: \"{}\" is not available".format(layer["layerHebName"]))
+                return "error"
         except rq.exceptions.SSLError:
             self.mb.pushCritical('SSL Error'," could not get layers from url")
             return "error"
@@ -492,24 +714,22 @@ class OpenDataLoader:
                             if l == layers[0]:
                                 continue
                             else:
-                                group1 = QgsLayerTreeGroup(l["layerHebName"], False)
+                                group1 = QgsLayerTreeGroup(l["name"], False)
                                 group0.insertChildNode(-1,group1)
                         layerUrl = "crs='{}' url='{}/{}'".format(crs, url,l["id"])
                         vlayer = QgsVectorLayer(layerUrl, l["name"], "arcgisfeatureserver")
                         QgsProject.instance().addMapLayer(vlayer, False)
                         group0.addLayer(vlayer)
                     #group = root.addGroup(groupName)
-                    
             else:
                 layerUrl = "crs='{}' url='{}'".format(crs, url)
-                vlayer = QgsVectorLayer(layerUrl,  data["name"], "arcgisfeatureserver")
+                vlayer = QgsVectorLayer(layerUrl,  layer["layerHebName"], "arcgisfeatureserver")
                 if group:
                     QgsProject.instance().addMapLayer(vlayer, False)
                     allGroup.addLayer(vlayer)
                 else:
                     QgsProject.instance().addMapLayer(vlayer)
             return data
-
 
     def addTempArcgisMap(self, layer, crs=None, group=False, allGroup=None):
         """
@@ -522,6 +742,9 @@ class OpenDataLoader:
         metdataUrl = "{}?f=pjson".format(url)
         try:
             data = json.loads(self.getWithProxy(metdataUrl))
+            if 'error' in data:
+                self.mb.pushCritical('Error',"The layer is not available, please report layer: \"{}\" is not available".format(layer["layerHebName"]))
+                return "error"
         except rq.exceptions.SSLError:
             self.mb.pushCritical('SSL Error'," could not get layers from url")
             return "error"
@@ -565,13 +788,12 @@ class OpenDataLoader:
                         group0.addLayer(rlayer)
             else:
                 layerUrl = "crs='{}' format='PNG32' url='{}'".format(crs, url)
-                rlayer = QgsRasterLayer(layerUrl,  data["name"], "arcgismapserver")
+                rlayer = QgsRasterLayer(layerUrl,  layer["layerHebName"], "arcgismapserver")
                 if group:
                     QgsProject.instance().addMapLayer(rlayer, False)
                     allGroup.addLayer(rlayer)
                 else:
                     QgsProject.instance().addMapLayer(rlayer)
-
 
     def esriJsonToGeoJson(self, url):
         base_object = {'type': "FeatureCollection",'features':[]}
@@ -659,44 +881,39 @@ class OpenDataLoader:
                     else:
                         QgsProject.instance().addMapLayer(vlayer)
 
-
-    def addPermanentArcgisFeature(self, url, name=None, username="", password="" , referer="", crs="EPSG:3857"):
-        metdataUrl = "{}?f=pjson".format(url)
-        if name:
-            connectionName = name
+    def addWMSService(self, layer, group=False, allGroup=None):
+        rlayer = QgsRasterLayer(layer["layerUrl"], layer["layerHebName"], layer["tempLayerType"])
+        if group:
+            QgsProject.instance().addMapLayer(rlayer, False)
+            allGroup.addLayer(rlayer)
         else:
-            try:
-                data = json.loads(self.getWithProxy(metdataUrl))
-            except rq.exceptions.SSLError:
-                self.mb.pushCritical('SSL Error'," could not get layers from url")
-                return "error"
-            connectionName = data["title"]
-        connectionType = "connections-arcgisfeatureserver"
-        QSettings().setValue("qgis/%s/%s/password" % (connectionType, connectionName),password)
-        QSettings().setValue("qgis/%s/%s/referer" % (connectionType, connectionName), referer)
-        QSettings().setValue("qgis/%s/%s/url" % (connectionType, connectionName), url)
-        QSettings().setValue("qgis/%s/%s/username" % (connectionType, connectionName), username)
-        self.iface.reloadConnections()
+            QgsProject.instance().addMapLayer(rlayer)
+            layerTree = self.iface.layerTreeCanvasBridge().rootGroup()
+            layerTree.insertChildNode(0, QgsLayerTreeLayer(rlayer))
 
-
-    def addPermanentArcgisMap(self, url, name=None, username="", password="" , referer="", crs="EPSG:3857"):
-        metdataUrl = "{}?f=pjson".format(url)
-        if name:
-            connectionName = name
+    def addWMSService(self, layer, group=False, allGroup=None):
+        rlayer = QgsRasterLayer(layer["layerUrl"], layer["layerHebName"], layer["tempLayerType"])
+        if group is not False:
+            QgsProject.instance().addMapLayer(rlayer, False)
+            allGroup.addLayer(rlayer)
         else:
-            try:
-                data = json.loads(self.getWithProxy(metdataUrl))
-            except rq.exceptions.SSLError:
-                self.mb.pushCritical('SSL Error'," could not get layers from url")
-                return "error"
-            connectionName = data["title"]
-        connectionType = "connections-arcgismapserver"
-        QSettings().setValue("qgis/%s/%s/password" % (connectionType, connectionName),password)
-        QSettings().setValue("qgis/%s/%s/referer" % (connectionType, connectionName), referer)
-        QSettings().setValue("qgis/%s/%s/url" % (connectionType, connectionName), url)
-        QSettings().setValue("qgis/%s/%s/username" % (connectionType, connectionName), username)
-        self.iface.reloadConnections()
-        
+            QgsProject.instance().addMapLayer(rlayer)
+
+    def addGeoserverGeoJson(self, layer, group=False, allGroup=None):
+        name = layer["layerHebName"]
+        if "layerUrl2" in layer:
+            url = layer["layerUrl2"]
+            type = "ogr"
+            vlayer = QgsVectorLayer(url,name,type)
+            if group:
+                QgsProject.instance().addMapLayer(vlayer, False)
+                if allGroup:
+                    allGroup.addLayer(vlayer)
+            else:
+                QgsProject.instance().addMapLayer(vlayer)
+        else:
+            self.mb.pushCritical('Error',"Unable to load WMS as vector layer")
+
     def addTempGeoJson(self, layer, group=False, allGroup=None):
         name = layer["layerHebName"]
         url = layer["layerUrl"]
@@ -709,7 +926,6 @@ class OpenDataLoader:
         else:
             QgsProject.instance().addMapLayer(vlayer)
     
-    
     def loadTemps(self):
         """
         loading temporary layers to the project
@@ -717,19 +933,18 @@ class OpenDataLoader:
         sending_button = self.dlg.sender()
         group = self.dlg.addAsGroup.isChecked()
         
-        selectedItemsAll = []
-        selectedItemsAll.append(self.dlg.govTree.selectedItems())
-        selectedItemsAll.append(self.dlg.muniTree.selectedItems())
-        selectedItemsAll.append(self.dlg.orgTree.selectedItems())
-        selectedItemsAll.append(self.dlg.opendataTree.selectedItems())
+        self.selectedItemsAll = []
+        self.selectedItemsAll.append(self.dlg.govTree.selectedItems())
+        self.selectedItemsAll.append(self.dlg.muniTree.selectedItems())
+        self.selectedItemsAll.append(self.dlg.orgTree.selectedItems())
+        self.selectedItemsAll.append(self.dlg.opendataTree.selectedItems())
         if self.curMode == 1:
-            selectedItemsAll = []
-            selectedItemsAll.append(self.dlg.tabWidget.currentWidget().findChildren(QTreeWidget)[0].selectedItems())
+            self.selectedItemsAll = []
+            self.selectedItemsAll.append(self.dlg.tabWidget.currentWidget().findChildren(QTreeWidget)[0].selectedItems())
 
         selectedItems = []
-        for i in selectedItemsAll:
+        for i in self.selectedItemsAll:
             selectedItems += i
-        #selectedItems = selectedItemsAll[:]
         selectedLayers = []
         layers = []
         for item in selectedItems:
@@ -758,12 +973,9 @@ class OpenDataLoader:
                     layers.extend(ods["layers"])
 
             for layer in layers:
-                if layer["tempLayerType"] == "ogr":
-                    if item.text(0)[:-2] == layer["layerHebName"]:
-                        selectedLayers.append(layer)
-                else:
                     if item.text(0) == layer["layerHebName"]:
                         selectedLayers.append(layer)
+
         seen = set()
         new_l = []
         for d in selectedLayers:
@@ -773,23 +985,25 @@ class OpenDataLoader:
                 new_l.append(d)
         selectedLayers = new_l
         
+        if "userServices" in self.dataList:
+            s = QgsSettings()
+            userServices = self.dataList["userServices"]
+            for i in self.dlg.userServicesTree.selectedItems():
+                for layer in userServices:
+                    if i.text(0) == layer['layerHebName']:
+                        selectedLayers.append(layer)
+        
         allGroup = QgsLayerTreeGroup("Group", False)
-        if group:
+        if group is not False:
             layerTree = self.iface.layerTreeCanvasBridge().rootGroup()
             layerTree.insertChildNode(0, allGroup)
-            if sending_button.objectName() == "addToMapV":
-                self.drawTempVLayer(selectedLayers, group, allGroup)
-            elif sending_button.objectName() == "addToMapR":
-                self.drawTempRLayer(selectedLayers, group, allGroup)
-        else:
-            if sending_button.objectName() == "addToMapV":
-                self.drawTempVLayer(selectedLayers, group, allGroup)
-            elif sending_button.objectName() == "addToMapR":
-                self.drawTempRLayer(selectedLayers, group, allGroup)
+        if sending_button.objectName() == "addToMapV":
+            self.drawTempVLayer(selectedLayers, group, allGroup)
+        elif sending_button.objectName() == "addToMapR":
+            self.drawTempRLayer(selectedLayers, group, allGroup)
         selectedLayers =[]
         self.clearSelection()
         allGroup = None
-        
     
     def drawTempVLayer(self, selectedLayers, group, allGroup):
         """
@@ -798,7 +1012,7 @@ class OpenDataLoader:
         layersAdded = 0
         for layer in selectedLayers:
             layerUrl = layer["layerUrl"]
-            layerCRS = layer["layerCRS"]
+            layerCRS = layer["layerCRS"] if "layerCRS" in layer else None
             tempLayerType = layer["tempLayerType"]
             connectionType = layer["connectionType"]
             if connectionType == 'connections-arcgisfeatureserver':
@@ -819,6 +1033,9 @@ class OpenDataLoader:
                 layer['layerUrl'] = json.dumps(gj)
                 self.addTempGeoJson(layer, group, allGroup)
                 layersAdded += 1
+            elif connectionType == 'wms':
+                self.addGeoserverGeoJson(layer, group, allGroup)
+                layersAdded += 1
             else:
                 self.mb.pushCritical('Error',"Unrecognised layer type {}".format(tempLayerType))
                 raise TypeError("Unrecognised layer type {}".format(tempLayerType))
@@ -827,7 +1044,6 @@ class OpenDataLoader:
         else:
             self.mb.pushInfo('No layers to add',"")
         self.clearSelection()
-            
     
     def drawTempRLayer(self, selectedLayers, group, allGroup):
         """
@@ -836,7 +1052,7 @@ class OpenDataLoader:
         layersAdded = 0
         for layer in selectedLayers:
             layerUrl = layer["layerUrl"]
-            layerCRS = layer["layerCRS"]
+            layerCRS = layer["layerCRS"] if "layerCRS" in layer else None
             tempLayerType = layer["tempLayerType"]
             if tempLayerType == 'arcgisfeatureserver':
                 layersAdded += 1
@@ -847,6 +1063,9 @@ class OpenDataLoader:
                 self.addTempArcgisMap(layer,layerCRS, group, allGroup)
             elif tempLayerType == 'ogr':
                 self.mb.pushWarning('Error',"Unable to render layer type {} as raster".format(layer["connectionType"]))
+            elif tempLayerType == 'wms':
+                layersAdded += 1
+                self.addWMSService(layer,group, allGroup)
             else:
                 self.mb.pushCritical('Error',"Unrecognised layer type {}".format(tempLayerType))
                 break
@@ -855,75 +1074,20 @@ class OpenDataLoader:
         else:
             self.mb.pushInfo('No layers to add',"")
         self.clearSelection()
-        
-    
-    
-    def addToBrowser(self):
-        sending_button = self.dlg.sender()
-        
-        selectedItemsAll = []
-        
-        selectedItemsAll.append(self.dlg.govTree.selectedItems())
-        selectedItemsAll.append(self.dlg.muniTree.selectedItems())
-        selectedItemsAll.append(self.dlg.orgTree.selectedItems())
-        selectedItemsAll.append(self.dlg.opendataTree.selectedItems())
-        selectedItems = []
-        for i in selectedItemsAll:
-            selectedItems += i
-        selectedLayers = []
-        layers = []
-        for item in selectedItems:
-            if item.parent() is None:
-                self.mb.pushWarning('Warning',"Adding entire organizations is not supported")
-                continue 
-            for muni in self.dataList["municipalities"]:
-                if item.parent().text(0) == self.dataList["municipalities"][muni]["hebName"]:
-                    selectedOrg = muni
-                    for j in self.dataList["municipalities"][selectedOrg]["layers"]:
-                        layers.append(j)
-                else:
-                    pass
-            for govOrg in self.dataList["govOrgs"]:
-                if item.parent().text(0) == self.dataList["govOrgs"][govOrg]["hebName"]:
-                    selectedOrg = govOrg
-                    for j in self.dataList["govOrgs"][selectedOrg]["layers"]:
-                        layers.append(j)
-                else:
-                    pass
-            for layer in layers:
-                if item.text(0) == layer["layerHebName"]:
-                    selectedLayers.append(layer)
-        seen = set()
-        new_l = []
-        for d in selectedLayers:
-            t = tuple(d.items())
-            if t not in seen:
-                seen.add(t)
-                new_l.append(d)
-        selectedLayers = new_l
-        layersAdded = 0
-        for layer in selectedLayers:
-            layerUrl = layer["layerUrl"]
-            layerName = layer["layerPermHebName"]
-            connectionType = layer["connectionType"]
-            if connectionType == 'connections-arcgisfeatureserver':
-                self.addPermanentArcgisFeature(layerUrl, layerName)
-                layersAdded +=1
-            elif connectionType == 'connections-arcgismapserver':
-                self.addPermanentArcgisMap(layerUrl, layerName)
-                layersAdded +=1
-            elif connectionType == 'GeoJSON':
-                self.mb.pushWarning('Unable to add permanent layer',
-                "GeoJSON layers cannot be added permanently, try saving the data to your computer")
-                break
-            else:
-                self.mb.pushCritical('Error',"Unrecognised connection type {}".format(connectionType))
-                break
-        if layersAdded > 0:
-            self.mb.pushInfo('{} Layers Added'.format(str(layersAdded)),"")
-        else:
-            self.mb.pushInfo('No layers to add',"")
-        self.clearSelection()
+
+    def closeFormDialog(self):
+        self.formdlg.reject()
+
+    def resizeTabWidget(self):
+        self.dlg.tabWidget.setGeometry(self.dlg.tabWidget.x(),self.dlg.tabWidget.y(),self.dlg.width()-60,self.dlg.tabWidget.height())
+        self.dlg.govTree.setGeometry(self.dlg.govTree.x(),self.dlg.govTree.y(),self.dlg.tabWidget.width()-5,self.dlg.govTree.height())
+        self.dlg.teaserGov.setGeometry(self.dlg.teaserGov.x(),self.dlg.teaserGov.y(),self.dlg.tabWidget.width()-5,self.dlg.teaserGov.height())
+        self.dlg.muniTree.setGeometry(self.dlg.muniTree.x(),self.dlg.muniTree.y(),self.dlg.tabWidget.width()-5,self.dlg.muniTree.height())
+        self.dlg.teaserMuni.setGeometry(self.dlg.teaserMuni.x(),self.dlg.teaserMuni.y(),self.dlg.tabWidget.width()-5,self.dlg.teaserMuni.height())
+        self.dlg.orgTree.setGeometry(self.dlg.orgTree.x(),self.dlg.orgTree.y(),self.dlg.tabWidget.width()-5,self.dlg.orgTree.height())
+        self.dlg.opendataTree.setGeometry(self.dlg.opendataTree.x(),self.dlg.opendataTree.y(),self.dlg.tabWidget.width()-5,self.dlg.opendataTree.height())
+        self.dlg.teaserUserServices.setGeometry(self.dlg.teaserUserServices.x(),self.dlg.teaserUserServices.y(),self.dlg.tabWidget.width()-5,self.dlg.teaserUserServices.height())
+        self.dlg.userServicesTree.setGeometry(self.dlg.userServicesTree.x(),self.dlg.userServicesTree.y(),self.dlg.tabWidget.width()-5,self.dlg.userServicesTree.height())
 
     def run(self):
         """Run method that performs all the real work"""
@@ -931,18 +1095,22 @@ class OpenDataLoader:
         if self.first_start:
             self.first_start = False
             self.dlg = opendata_loaderDialog()
-            self.loadCredentials()
-        else:
-            self.loadCredentials()
-            self.loadLayers()
-  
+            self.setSelectionType()
+
         self.loadCredentials()
+        self.loadLayers()
+
+        self.dlg.resized.connect(self.resizeTabWidget)
         self.dlg.registerButton.clicked.connect(self.openRegisterButton)
         self.dlg.submitCredntials.clicked.connect(self.loadLayers)
         self.dlg.addToMapV.clicked.connect(self.loadTemps)
         self.dlg.addToMapR.clicked.connect(self.loadTemps)
-        self.dlg.addPerm.clicked.connect(self.addToBrowser)
+        self.dlg.addToMyServices.clicked.connect(self.addPluginServiceToUserServices)
+        self.dlg.addServiceButton.clicked.connect(self.openUserServicesForm)
         self.dlg.vLabel.setText(self.version)
+        self.formdlg.AddUserLayer.clicked.connect(self.addUserService)
+        self.formdlg.addExisting.clicked.connect(self.addExisting)
+        self.formdlg.closeForm.clicked.connect(self.closeFormDialog)
 
         self.dlg.selectionButton.clicked.connect(self.setSelectionType)
         self.clearSelection()

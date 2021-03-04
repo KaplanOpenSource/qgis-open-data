@@ -27,7 +27,7 @@
      <number>6</number>
     </property>
     <item>
-     <widget class="QPushButton" name="addPerm">
+     <widget class="QPushButton" name="addToMyServices">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>0</horstretch>
@@ -35,7 +35,7 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Browser-הוספה קבועה ל</string>
+       <string>העתקה לשכבות שלי</string>
       </property>
      </widget>
     </item>
@@ -48,7 +48,7 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>הוספה למפה כרסטר</string>
+       <string>הוספה כשכבה רסטרית</string>
       </property>
      </widget>
     </item>
@@ -173,11 +173,14 @@
    </layout>
   </widget>
   <widget class="QTabWidget" name="tabWidget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>30</x>
      <y>130</y>
-     <width>531</width>
+     <width>591</width>
      <height>381</height>
     </rect>
    </property>
@@ -199,7 +202,7 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>521</width>
+       <width>591</width>
        <height>351</height>
       </rect>
      </property>
@@ -224,10 +227,10 @@
     <widget class="QLabel" name="teaserGov">
      <property name="geometry">
       <rect>
-       <x>-10</x>
-       <y>-10</y>
-       <width>541</width>
-       <height>381</height>
+       <x>0</x>
+       <y>0</y>
+       <width>591</width>
+       <height>351</height>
       </rect>
      </property>
      <property name="palette">
@@ -378,7 +381,7 @@ background-color: rgba(131, 131, 131,0.4);
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>521</width>
+       <width>591</width>
        <height>351</height>
       </rect>
      </property>
@@ -403,10 +406,10 @@ background-color: rgba(131, 131, 131,0.4);
     <widget class="QLabel" name="teaserMuni">
      <property name="geometry">
       <rect>
-       <x>-10</x>
-       <y>-10</y>
-       <width>541</width>
-       <height>381</height>
+       <x>0</x>
+       <y>0</y>
+       <width>591</width>
+       <height>351</height>
       </rect>
      </property>
      <property name="palette">
@@ -557,7 +560,7 @@ background-color: rgba(131, 131, 131,0.4);
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>521</width>
+       <width>591</width>
        <height>351</height>
       </rect>
      </property>
@@ -589,7 +592,7 @@ background-color: rgba(131, 131, 131,0.4);
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>521</width>
+       <width>591</width>
        <height>351</height>
       </rect>
      </property>
@@ -610,6 +613,218 @@ background-color: rgba(131, 131, 131,0.4);
        <string notr="true">1</string>
       </property>
      </column>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="userServicesTab">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <attribute name="title">
+     <string>השכבות שלי</string>
+    </attribute>
+    <widget class="QTreeWidget" name="userServicesTree">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>591</width>
+       <height>351</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::RightToLeft</enum>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::MultiSelection</enum>
+     </property>
+     <property name="columnCount">
+      <number>1</number>
+     </property>
+     <attribute name="headerVisible">
+      <bool>false</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string notr="true">1</string>
+      </property>
+     </column>
+    </widget>
+    <widget class="QLabel" name="teaserUserServices">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>591</width>
+       <height>351</height>
+      </rect>
+     </property>
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Button">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Base">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Window">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Button">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Base">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Window">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Button">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Text">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Base">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+        <colorrole role="Window">
+         <brush brushstyle="SolidPattern">
+          <color alpha="102">
+           <red>131</red>
+           <green>131</green>
+           <blue>131</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>26</pointsize>
+      </font>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">*{
+background-color: rgba(131, 131, 131,0.4);
+}</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
     </widget>
    </widget>
   </widget>
@@ -792,22 +1007,6 @@ background-color: rgba(131, 131, 131,0.4);
     <string/>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>520</y>
-     <width>141</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string> ⛛ זמין רק כשכבה וקטורית</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
@@ -833,6 +1032,31 @@ background-color: rgba(131, 131, 131,0.4);
    <property name="text">
     <string>v.</string>
    </property>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>590</y>
+     <width>121</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QPushButton" name="addServiceButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>הוספת שכבה שלי</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
