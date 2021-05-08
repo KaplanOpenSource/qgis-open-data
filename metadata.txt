@@ -21,7 +21,7 @@ changelog=
  * Catch error when user tries to add layer before selecting one.
 
  2020-10-29 Version 0.5.0
- * Add support for proxy connections in government oraganizations.
+ * Add support for proxy connections in government organizations.
  * Show NGOs and Open Data websites tabs for unregistered users.
 
  2020-06-23 Version 0.4.1:
